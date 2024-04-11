@@ -1,0 +1,16 @@
+{
+  // editor
+  "editor.formatOnSave": false,
+  "editor.formatOnPaste": false,
+  // misc
+  "terminal.integrated.scrollback": 5000,
+  "search.exclude": {
+  },
+  // solidity
+  "solidity.defaultCompiler": "remote",
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "solidity-metrics.file.exclusions.glob": "{**/node_modules,**/lib*,**/test*,**/cache,**/out/}",
+  "solidity.formatter": "forge"
+}
