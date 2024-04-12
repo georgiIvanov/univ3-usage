@@ -18,9 +18,12 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
   INonfungiblePositionManager npm = INonfungiblePositionManager(address(0xC36442b4a4522E871399CD717aBDD847Ab11FE88));
 
   uint24 constant poolFee = 500;
-  uint160 initialPrice = 1000 ether;
-  int24 tickLower = 0;
-  int24 tickUpper = 100;
+  uint160 initialPrice = 1000 ether; 
+  uint256 tokensToDeposit = 100 ether;
+  // These 2 values control at which ticks the liquidity will be added.
+  // They need to be evenly divisible by the pool's tick spacing - tickLower/Upper % tickSpacing == 0
+  int24 tickLower = 483550;
+  int24 tickUpper = 483580;
 
   MockERC20 token0;
   MockERC20 token1;
@@ -48,21 +51,23 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
 
     assertNotEq(address(0), address(univ3Pool));
 
+    token0.mint(address(this), 100 ether);
+    token1.mint(address(this), 100 ether);
+
     // initial sqrt price: 1 WETH = 1000 USDC
     // sqrtPriceX96 = sqrt(1000 ether) * 2^96
     uint160 sqrtPriceX96 = Helpers.computeSqrtPriceX96(initialPrice);
     sl.logLineDelimiter("setUp");
     sl.log("sqrtPriceX96: ", sqrtPriceX96);
     univ3Pool.initialize(sqrtPriceX96);
+    sl.logInt("tick spacing: ", univ3Pool.tickSpacing());
+    (, int24 tick,,,,,) = univ3Pool.slot0();
+    sl.logInt("current tick: ", tick);
   }
 
   // Adding liquidity to an empty pool, oversimplified example
   function testAddLiquidityToPool() public {
     sl.logLineDelimiter("Add liquidity to an empty pool");
-    uint256 tokensToDeposit = 2 ether;
-
-    token0.mint(address(this), 100 ether);
-    token1.mint(address(this), 100 ether);
 
     (uint160 sqrtPriceX96, , , , , , ) = univ3Pool.slot0();
     uint160 sqrtRatioAX96 = Helpers.getSqrtRatioAtTick(tickLower);
@@ -93,11 +98,7 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
   }
 
   function testAddLiquidityViaNPM() public {
-    sl.logLineDelimiter("Add liquidity via NPM to empty pool");
-    uint256 tokensToDeposit = 2 ether;
-
-    token0.mint(address(this), 100 ether);
-    token1.mint(address(this), 100 ether);
+    sl.logLineDelimiter("Add liquidity via NPM to empty pool");    
 
     token0.approve(address(npm), tokensToDeposit);
     token1.approve(address(npm), tokensToDeposit);
@@ -167,5 +168,16 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
     }
     sl.logLineDelimiter();
     sl.outdent();
+  }
+
+  function onERC721Received(
+    address operator,
+    address,
+    uint256 tokenId,
+    bytes calldata
+  ) external returns (bytes4) {
+    // get position information
+    sl.logLineDelimiter("onERC721Received");
+    return this.onERC721Received.selector;
   }
 }
