@@ -45,5 +45,6 @@ contract Factory is Test {
 
     assertEq(IUniswapV3Pool(newPool).token0(), first);
     assertEq(IUniswapV3Pool(newPool).token1(), second);
+    // To use the pool, it needs to first be initialized
   }
 }
