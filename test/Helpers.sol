@@ -11,6 +11,26 @@ library Helpers {
   uint8 internal constant RESOLUTION = 96;
   uint256 internal constant Q96 = 0x1000000000000000000000000;
 
+
+  /// @notice Returns the nearest tick that is divisible by the tickSpacing
+  /// @dev Example: Current tick is 483567, spacing 10, will return -> 483570
+  function getNearestUsableTick(int24 currentTick, int24 tickSpacing) internal pure returns (int24) {
+    // 0 is always a valid tick
+    if (currentTick == 0) {
+      return 0;
+    }
+    // Determines direction
+    int24 direction = currentTick >= 0 ? int24(1) : -1;
+    // Changes direction
+    currentTick *= direction;
+    // Calculates nearest tick based on how close the current tick remainder is to space / 2
+    int24 nearestTick = currentTick % tickSpacing <= tickSpacing / 2 ? currentTick - (currentTick % tickSpacing) : currentTick + (tickSpacing - (currentTick % tickSpacing));
+    // Changes direction back
+    nearestTick *= direction;
+
+    return nearestTick;
+  }
+
   function computeSqrtPriceX96(uint160 price) internal pure returns(uint160) {
     return Helpers.sqrt(price) * 2**96;
   }
