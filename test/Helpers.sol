@@ -11,6 +11,10 @@ library Helpers {
   uint8 internal constant RESOLUTION = 96;
   uint256 internal constant Q96 = 0x1000000000000000000000000;
 
+  function computeSqrtPriceX96(uint160 price) internal pure returns(uint160) {
+    return Helpers.sqrt(price) * 2**96;
+  }
+  
   // Helper function to calculate square root
   function sqrt(uint160 x) internal pure returns (uint160 y) {
     uint160 z = (x + 1) / 2;

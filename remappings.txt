@@ -2,4 +2,5 @@
 @uniswapv3-core/=lib/v3-core/contracts/
 @uniswapv3-periphery/=lib/v3-periphery/contracts/
 @uniswap/=lib
-solc-log/=lib/solc-log/src/
+@src/=src/
+@solc-log/=lib/solc-log/src/

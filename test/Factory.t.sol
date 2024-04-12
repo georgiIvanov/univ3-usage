@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import {sl} from "solc-log/sl.sol";
+import {sl} from "@solc-log/sl.sol";
 
 import "@uniswapv3-core/interfaces/IUniswapV3Factory.sol";
 import "@uniswapv3-core/interfaces/IUniswapV3Pool.sol";
