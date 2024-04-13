@@ -23,7 +23,6 @@ contract SingleSwap is Test, IUniswapV3MintCallback {
   uint256 tokensToDeposit = 10000 ether;
   int24 tickLower;
   int24 tickUpper;
-  int24 currentTick;
 
   MockERC20 token0;
   MockERC20 token1;
@@ -63,7 +62,7 @@ contract SingleSwap is Test, IUniswapV3MintCallback {
     sl.log("sqrtPriceX96: ", sqrtPriceX96);
     univ3Pool.initialize(sqrtPriceX96);
     sl.logInt("tick spacing: ", univ3Pool.tickSpacing());
-    (, currentTick,,,,,) = univ3Pool.slot0();
+    (, int24 currentTick,,,,,) = univ3Pool.slot0();
     sl.logInt("current tick: ", currentTick);
 
     int24 nearestTick = Helpers.getNearestUsableTick(currentTick, univ3Pool.tickSpacing());
@@ -118,6 +117,9 @@ contract SingleSwap is Test, IUniswapV3MintCallback {
     sl.logInt("amount1: ", amount1);
     logTokenBalances(swapperAddr);
 
+    (uint160 sqrtPriceX96, int24 currentTick,,,,,) = univ3Pool.slot0();
+    sl.log("New sqrtPriceX96: ", sqrtPriceX96);
+    sl.logInt("current tick: ", currentTick);
   }
 
   function testSwapTokensViaRouter() public {
@@ -146,6 +148,9 @@ contract SingleSwap is Test, IUniswapV3MintCallback {
 
     sl.log("amount out: ", amountOut);
     logTokenBalances(eoaSwapper);
+    (uint160 sqrtPriceX96, int24 currentTick,,,,,) = univ3Pool.slot0();
+    sl.log("New sqrtPriceX96: ", sqrtPriceX96);
+    sl.logInt("current tick: ", currentTick);
   }
 
   function logPoolInfo() public view {
