@@ -20,6 +20,8 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
   uint24 constant poolFee = 500;
   // The price of one asset in terms of the other (should not be with 18 decimals)
   uint160 initialPrice = 1000; 
+  // Will try to add same amount for both tokens, but how much is actually deposited depends on the price.
+  // If they are 1:1, then 10000 of each token will be deposited. Try setting initialPrice to 1 for this.
   uint256 tokensToDeposit = 10000 ether;
   // These 2 values control at which ticks the liquidity will be added.
   // They need to be evenly divisible by the pool's tick spacing - tickLower/Upper % tickSpacing == 0
@@ -65,9 +67,11 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
     sl.logInt("tick spacing: ", univ3Pool.tickSpacing());
     (, currentTick,,,,,) = univ3Pool.slot0();
     sl.logInt("current tick: ", currentTick);
+    logLPBalances();
   }
 
   // Adding liquidity to an empty pool, oversimplified example
+  // In production minted amounts would be checked for slippage, data for callback will be provided, deposited token amounts would be calculated, etc.
   function testAddLiquidityToPool() public {
     sl.logLineDelimiter("Add liquidity to an empty pool");
     int24 nearestTick = Helpers.getNearestUsableTick(currentTick, univ3Pool.tickSpacing());
@@ -103,6 +107,7 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
     sl.log("amount0: ", amount0);
     sl.log("amount1: ", amount1);
     logPoolInfo();
+    logLPBalances();
   }
 
   function testAddLiquidityViaNPM() public {
@@ -147,10 +152,13 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
     );
 
     sl.log("tokenId: ", tokenId, 0);
+    sl.log("LP address: ", address(this));
+    sl.log("Owner of tokenId: ", npm.ownerOf(tokenId));
     sl.log("liquidity: ", liquidity);
     sl.log("amount0: ", amount0);
     sl.log("amount1: ", amount1);
     logPoolInfo();
+    logLPBalances();
   }
 
   function logPoolInfo() public view {
@@ -158,6 +166,13 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
     sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
     sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
   }
+
+  function logLPBalances() public view {
+    sl.logLineDelimiter("LP Balances");
+    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(this)));
+    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(this)));
+  }
+
   /*//////////////////////////////////////////////////////////////
                         UNIV3 MINT CALLBACK
   //////////////////////////////////////////////////////////////*/
