@@ -4,6 +4,13 @@ Illustrates UniswapV3 usage in minimal examples.
 
 Code is written with educational purpose and is unfit for production uses.
 
+Examples are meant to be examined in the following order:
+1. Factory - creation of a uniswap v3 pool
+2. AddLiquidity - adding liquidity to a pool directly and via npm
+3. SingleSwap - perform a swap in one direction
+
+> Some explanations are omitted in later examples for brevity.
+
 # Structure
 Some of the interfaces needed to be copied to the project's `src/` folder, because of OZ import path issues.
 
