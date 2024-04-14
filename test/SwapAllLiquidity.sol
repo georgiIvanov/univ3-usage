@@ -113,7 +113,7 @@ contract SwapAllLiquidity is BaseTest, IUniswapV3MintCallback {
       sl.log("New sqrtPriceX96: ", sqrtPriceX96);
       sl.logInt("current tick: ", currentTick);
       sl.log("Liquidity range: ", univ3Pool.liquidity());
-      logPoolInfo();
+      logPoolBalancesInfo();
 
       if(univ3Pool.liquidity() == 0) {
         break;
@@ -149,27 +149,12 @@ contract SwapAllLiquidity is BaseTest, IUniswapV3MintCallback {
       sl.log("New sqrtPriceX96: ", sqrtPriceX96);
       sl.logInt("current tick: ", currentTick);
       sl.log("Liquidity range: ", univ3Pool.liquidity());
-      logPoolInfo();
+      logPoolBalancesInfo();
 
       if(univ3Pool.liquidity() == 0) {
         break;
       }
     }
-  }
-
-
-  function logPoolInfo() public view {
-    sl.logLineDelimiter("Pool Info");
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
-  }
-
-  function logTokenBalances(address user) public view {
-    sl.indent();
-    sl.logLineDelimiter(string.concat("T Balances ", vm.toString(user)));
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(user));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(user));
-    sl.outdent();
   }
 
   /*//////////////////////////////////////////////////////////////

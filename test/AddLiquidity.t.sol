@@ -96,7 +96,7 @@ contract AddLiquidity is BaseTest, IUniswapV3MintCallback {
 
     sl.log("amount0: ", amount0);
     sl.log("amount1: ", amount1);
-    logPoolInfo();
+    logPoolBalancesInfo();
     logLPBalances();
   }
 
@@ -147,15 +147,11 @@ contract AddLiquidity is BaseTest, IUniswapV3MintCallback {
     sl.log("liquidity: ", liquidity);
     sl.log("amount0: ", amount0);
     sl.log("amount1: ", amount1);
-    logPoolInfo();
+    logPoolBalancesInfo();
     logLPBalances();
   }
 
-  function logPoolInfo() public view {
-    sl.logLineDelimiter("Pool Info");
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
-  }
+  
 
   function logLPBalances() public view {
     sl.logLineDelimiter("LP Balances");

@@ -33,4 +33,35 @@ contract BaseTest is Test {
 
   Swapper swapper; // EOA account can't swap directly on univ3 pool, because it requires callback
   address swapperAddr;
+
+  function logPoolBalancesInfo() public view {
+    sl.logLineDelimiter("Pool Balances Info");
+    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
+    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
+  }
+
+  function logPoolDetailedInfo() public view {
+    sl.indent();
+    sl.logLineDelimiter("Pool Info");
+    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
+    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
+    (uint160 sqrtPriceX96, int24 currentTick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext,,) 
+    = univ3Pool.slot0();
+    sl.log("New sqrtPriceX96: ", sqrtPriceX96);
+    sl.logInt("Current tick: ", currentTick);
+    sl.log("Liquidity range: ", univ3Pool.liquidity());
+    sl.log("observationIndex: ", observationIndex, 0);
+    sl.log("observationCardinality: ", observationCardinality, 0);
+    sl.log("observationCardinalityNext: ", observationCardinalityNext, 0);
+    sl.logLineDelimiter();
+    sl.outdent();
+  }
+
+  function logTokenBalances(address user) public view {
+    sl.indent();
+    sl.logLineDelimiter(string.concat("T Balances ", vm.toString(user)));
+    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(user));
+    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(user));
+    sl.outdent();
+  }
 }

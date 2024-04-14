@@ -103,7 +103,7 @@ contract TWAP is BaseTest, IUniswapV3MintCallback {
       sl.logLineDelimiter(title);
       
       uint160 sqrtPriceLimitX96 = Helpers.MIN_SQRT_RATIO + 1;
-      (int256 amount0, int256 amount1) = univ3Pool.swap(
+      univ3Pool.swap(
         swapperAddr, 
         true,              // swapping t0 for t1 (if false - swapping t1 for t0)
         amountToSwap,      // amount to swap
@@ -113,7 +113,7 @@ contract TWAP is BaseTest, IUniswapV3MintCallback {
 
       logTokenBalances(swapperAddr);
       
-      logPoolInfo();
+      logPoolDetailedInfo();
       vm.warp(block.timestamp + 1 minutes);
       if(univ3Pool.liquidity() == 0) {
         break;
@@ -140,7 +140,7 @@ contract TWAP is BaseTest, IUniswapV3MintCallback {
       sl.logLineDelimiter(title);
       
       uint160 sqrtPriceLimitX96 = Helpers.MAX_SQRT_RATIO - 1;
-      (int256 amount0, int256 amount1) = univ3Pool.swap(
+      univ3Pool.swap(
         swapperAddr, 
         false,             // swapping t1 for t0
         amountToSwap,      // amount to swap
@@ -150,7 +150,7 @@ contract TWAP is BaseTest, IUniswapV3MintCallback {
 
       logTokenBalances(swapperAddr);
       
-      logPoolInfo();
+      logPoolDetailedInfo();
       vm.warp(block.timestamp + 1 minutes);
       if(univ3Pool.liquidity() == 0) {
         break;
@@ -185,32 +185,6 @@ contract TWAP is BaseTest, IUniswapV3MintCallback {
 
   function getPriceX96FromSqrtPriceX96(uint160 sqrtPriceX96) public pure returns(uint256 priceX96) {
     return Helpers.mulDiv(sqrtPriceX96, sqrtPriceX96, Helpers.Q96);
-  }
-
-
-  function logPoolInfo() public view {
-    sl.indent();
-    sl.logLineDelimiter("Pool Info");
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
-    (uint160 sqrtPriceX96, int24 currentTick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext,,) 
-    = univ3Pool.slot0();
-    sl.log("New sqrtPriceX96: ", sqrtPriceX96);
-    sl.logInt("Current tick: ", currentTick);
-    sl.log("Liquidity range: ", univ3Pool.liquidity());
-    sl.log("observationIndex: ", observationIndex, 0);
-    sl.log("observationCardinality: ", observationCardinality, 0);
-    sl.log("observationCardinalityNext: ", observationCardinalityNext, 0);
-    sl.logLineDelimiter();
-    sl.outdent();
-  }
-
-  function logTokenBalances(address user) public view {
-    sl.indent();
-    sl.logLineDelimiter(string.concat("T Balances ", vm.toString(user)));
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(user));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(user));
-    sl.outdent();
   }
 
   /*//////////////////////////////////////////////////////////////

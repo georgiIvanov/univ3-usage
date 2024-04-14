@@ -77,7 +77,7 @@ contract SingleSwap is BaseTest, IUniswapV3MintCallback {
     );
     sl.log("amount0: ", amount0);
     sl.log("amount1: ", amount1);
-    logPoolInfo();
+    logPoolBalancesInfo();
 
     swapper = new Swapper(token0, token1, univ3Pool);
     swapperAddr = address(swapper);
@@ -139,18 +139,6 @@ contract SingleSwap is BaseTest, IUniswapV3MintCallback {
     (uint160 sqrtPriceX96, int24 currentTick,,,,,) = univ3Pool.slot0();
     sl.log("New sqrtPriceX96: ", sqrtPriceX96);
     sl.logInt("current tick: ", currentTick);
-  }
-
-  function logPoolInfo() public view {
-    sl.logLineDelimiter("Pool Info");
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
-  }
-
-  function logTokenBalances(address user) public view {
-    sl.logLineDelimiter(string.concat("T Balances ", vm.toString(user)));
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(user));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(user));
   }
 
   /*//////////////////////////////////////////////////////////////
