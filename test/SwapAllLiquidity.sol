@@ -101,9 +101,10 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
     vm.startPrank(swapperAddr);
     deal(token0addr, swapperAddr, 100 ether);
     logTokenBalances(swapperAddr);
-    int256 amounToSwap = 1 ether;
+    int256 amountToSwap = 1 ether;
     int24 i = 0;
 
+    // swap t0 for t1 until liquidity is depleted
     while(true) {
       string memory title = string.concat("Swap 1 WETH for USDC #", vm.toString(++i));
       sl.logLineDelimiter(title);
@@ -112,7 +113,7 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
       (int256 amount0, int256 amount1) = univ3Pool.swap(
         swapperAddr, 
         true,              // swapping t0 for t1 (if false - swapping t1 for t0)
-        amounToSwap,       // amount to swap
+        amountToSwap,      // amount to swap
         sqrtPriceLimitX96, // if swapping t0 for t1, price can't be less than this. (Essentially slippage on price)
         "0x"
       );
@@ -132,6 +133,41 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
       }
       sl.log("\n");
     }
+
+    // swap t1 for t0 until liquidity is depleted
+    sl.log("\n\n");
+    sl.logLineDelimiter("Begin swapping in the other direction");
+    deal(token1addr, swapperAddr, 10000 ether);
+    amountToSwap = 1_000 ether;
+    i = 0;
+    logTokenBalances(swapperAddr);
+    while(true) {
+      string memory title = string.concat("Swap 1000 USDC for WETH #", vm.toString(++i));
+      sl.logLineDelimiter(title);
+      
+      uint160 sqrtPriceLimitX96 = Helpers.MAX_SQRT_RATIO - 1;
+      (int256 amount0, int256 amount1) = univ3Pool.swap(
+        swapperAddr, 
+        false,             // swapping t1 for t0
+        amountToSwap,      // amount to swap
+        sqrtPriceLimitX96, // when swapping t1 for t0, price can't be more than this. (Essentially slippage on price)
+        "0x"
+      );
+
+      sl.logInt("amount0: ", amount0);
+      sl.logInt("amount1: ", amount1);
+      logTokenBalances(swapperAddr);
+
+      (uint160 sqrtPriceX96, int24 currentTick,,,,,) = univ3Pool.slot0();
+      sl.log("New sqrtPriceX96: ", sqrtPriceX96);
+      sl.logInt("current tick: ", currentTick);
+      sl.log("Liquidity range: ", univ3Pool.liquidity());
+      logPoolInfo();
+
+      if(univ3Pool.liquidity() == 0) {
+        break;
+      }
+    }
   }
 
 
@@ -142,9 +178,11 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
   }
 
   function logTokenBalances(address user) public view {
+    sl.indent();
     sl.logLineDelimiter(string.concat("T Balances ", vm.toString(user)));
     sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(user));
     sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(user));
+    sl.outdent();
   }
 
   /*//////////////////////////////////////////////////////////////
