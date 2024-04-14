@@ -12,25 +12,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "./MockERC20.sol";
 import {Helpers} from "./Helpers.sol";
 import {Swapper} from "./Swapper.sol";
+import {BaseTest} from "./BaseTest.sol";
 
-contract TWAP is Test, IUniswapV3MintCallback {
-  IUniswapV3Factory uniFactory = IUniswapV3Factory(address(0x1F98431c8aD98523631AE4a59f267346ea31F984));
-
+contract TWAP is BaseTest, IUniswapV3MintCallback {
   uint24 constant poolFee = 500;
   uint160 initialPrice = 1000;
   uint256 tokensToDeposit = 5000 ether; // actual deposited tokens depend on the initial price ratio
   int24 tickLower;
   int24 tickUpper;
-
-  MockERC20 token0;
-  MockERC20 token1;
-
-  address token0addr;
-  address token1addr;
-
-  IUniswapV3Pool univ3Pool;
-  Swapper swapper; // EOA account can't swap directly on univ3 pool, because it requires callback
-  address swapperAddr;
 
   function setUp() public {
     string memory rpcUrl = vm.rpcUrl("mainnet");

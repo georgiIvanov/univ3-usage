@@ -8,11 +8,9 @@ import "@uniswapv3-core/interfaces/IUniswapV3Factory.sol";
 import "@uniswapv3-core/interfaces/IUniswapV3Pool.sol";
 
 import {MockERC20} from "./MockERC20.sol";
+import {BaseTest} from "./BaseTest.sol";
 
-contract Factory is Test {
-  IUniswapV3Factory uniFactory = IUniswapV3Factory(address(0x1F98431c8aD98523631AE4a59f267346ea31F984));
-  address constant USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
-  address constant WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+contract Factory is BaseTest {
   uint24 constant poolFee = 500;
 
   constructor() {

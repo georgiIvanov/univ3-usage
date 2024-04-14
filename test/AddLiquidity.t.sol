@@ -12,11 +12,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@src/INonfungiblePositionManager.sol";
 import {MockERC20} from "./MockERC20.sol";
 import {Helpers} from "./Helpers.sol";
+import {BaseTest} from "./BaseTest.sol";
 
-contract AddLiquidity is Test, IUniswapV3MintCallback {
-  IUniswapV3Factory uniFactory = IUniswapV3Factory(address(0x1F98431c8aD98523631AE4a59f267346ea31F984));
-  INonfungiblePositionManager npm = INonfungiblePositionManager(address(0xC36442b4a4522E871399CD717aBDD847Ab11FE88));
-
+contract AddLiquidity is BaseTest, IUniswapV3MintCallback {
   uint24 constant poolFee = 500;
   // The price of one asset in terms of the other (should not be with 18 decimals)
   uint160 initialPrice = 1000; 
@@ -28,14 +26,6 @@ contract AddLiquidity is Test, IUniswapV3MintCallback {
   int24 tickLower;
   int24 tickUpper;
   int24 currentTick; // current tick of the pool (where the price is currently at)
-
-  MockERC20 token0;
-  MockERC20 token1;
-
-  address token0addr;
-  address token1addr;
-
-  IUniswapV3Pool univ3Pool;
 
   function setUp() public {
     string memory rpcUrl = vm.rpcUrl("mainnet");
