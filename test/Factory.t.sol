@@ -26,7 +26,7 @@ contract Factory is Test {
     sl.log("blockNumber: ", block.number, 0);
   }
 
-  function testGetPool() public {
+  function testGetPool() view public {
     address pool = uniFactory.getPool(WETH, USDC, poolFee);
     sl.log("univ3 pool: ", pool);
     assertNotEq(address(0), pool);

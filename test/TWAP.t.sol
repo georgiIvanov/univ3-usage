@@ -13,12 +13,12 @@ import {MockERC20} from "./MockERC20.sol";
 import {Helpers} from "./Helpers.sol";
 import {Swapper} from "./Swapper.sol";
 
-contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
+contract TWAP is Test, IUniswapV3MintCallback {
   IUniswapV3Factory uniFactory = IUniswapV3Factory(address(0x1F98431c8aD98523631AE4a59f267346ea31F984));
 
   uint24 constant poolFee = 500;
   uint160 initialPrice = 1000;
-  uint256 tokensToDeposit = 5000 ether;
+  uint256 tokensToDeposit = 5000 ether; // actual deposited tokens depend on the initial price ratio
   int24 tickLower;
   int24 tickUpper;
 
@@ -88,19 +88,25 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
     sl.log("start amount0: ", amount0);
     sl.log("start amount1: ", amount1);
 
+
+    // Initially, there is only one slot for storing prices for TWAP calculation
+    univ3Pool.increaseObservationCardinalityNext(20); // cardinality index wraps once it reaches the max 
+
     swapper = new Swapper(token0, token1, univ3Pool);
     swapperAddr = address(swapper);
     vm.label(swapperAddr, "Swapper");
     sl.log("\n");
   }
   
-  // Swaps until liquidity is depleted
-  function testSwapAllLiquidityInPool() public {
+  // Perorm swaps and calculate TWAP
+  function testCalculateTWAP() public {
     vm.startPrank(swapperAddr);
     deal(token0addr, swapperAddr, 100 ether);
     logTokenBalances(swapperAddr);
     int256 amountToSwap = 1 ether;
     int24 i = 0;
+    // Observe how the TWAP sqrtPriceX96 changes when moving this value closer to 0
+    uint32 twapInterval = 6 minutes;
 
     // swap t0 for t1 until liquidity is depleted
     while(true) {
@@ -116,21 +122,21 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
         "0x"
       );
 
-      sl.logInt("amount0: ", amount0);
-      sl.logInt("amount1: ", amount1);
       logTokenBalances(swapperAddr);
-
-      (uint160 sqrtPriceX96, int24 currentTick,,,,,) = univ3Pool.slot0();
-      sl.log("New sqrtPriceX96: ", sqrtPriceX96);
-      sl.logInt("current tick: ", currentTick);
-      sl.log("Liquidity range: ", univ3Pool.liquidity());
+      
       logPoolInfo();
-
+      vm.warp(block.timestamp + 1 minutes);
       if(univ3Pool.liquidity() == 0) {
         break;
       }
       sl.log("\n");
     }
+
+    sl.logLineDelimiter("Twap price for the last X minutes");
+    vm.warp(block.timestamp + 1 minutes);
+    // Reverts if twapInterval is too far to get a price
+    sl.log("TWAP sqrtPriceX96: ", getSqrtTwapX96(twapInterval));
+    sl.log("TWAP priceX96: ", getPriceX96FromSqrtPriceX96(getSqrtTwapX96(twapInterval)));
 
     // swap t1 for t0 until liquidity is depleted
     sl.log("\n\n");
@@ -139,6 +145,7 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
     amountToSwap = 1_000 ether;
     i = 0;
     logTokenBalances(swapperAddr);
+    
     while(true) {
       string memory title = string.concat("Swap 1000 USDC for WETH #", vm.toString(++i));
       sl.logLineDelimiter(title);
@@ -152,27 +159,61 @@ contract SwapAllLiquidity is Test, IUniswapV3MintCallback {
         "0x"
       );
 
-      sl.logInt("amount0: ", amount0);
-      sl.logInt("amount1: ", amount1);
       logTokenBalances(swapperAddr);
-
-      (uint160 sqrtPriceX96, int24 currentTick,,,,,) = univ3Pool.slot0();
-      sl.log("New sqrtPriceX96: ", sqrtPriceX96);
-      sl.logInt("current tick: ", currentTick);
-      sl.log("Liquidity range: ", univ3Pool.liquidity());
+      
       logPoolInfo();
-
+      vm.warp(block.timestamp + 1 minutes);
       if(univ3Pool.liquidity() == 0) {
         break;
       }
+      sl.log("\n");
     }
+
+    sl.logLineDelimiter("Twap price for the last X minutes");
+    vm.warp(block.timestamp + 1 minutes);
+    // Reverts if twapInterval is too far to get a price
+    sl.log("TWAP sqrtPriceX96: ", getSqrtTwapX96(twapInterval));
+    sl.log("TWAP priceX96: ", getPriceX96FromSqrtPriceX96(getSqrtTwapX96(twapInterval)));
+  }
+
+  function getSqrtTwapX96(uint32 twapInterval) public view returns (uint160 sqrtPriceX96) {
+    if (twapInterval == 0) {
+      // return the current price if twapInterval == 0
+      (sqrtPriceX96, , , , , , ) = univ3Pool.slot0();
+    } else {
+      uint32[] memory secondsAgos = new uint32[](2);
+      secondsAgos[0] = twapInterval; // from (before)
+      secondsAgos[1] = 0; // to (now)
+      
+      (int56[] memory tickCumulatives, ) = univ3Pool.observe(secondsAgos);
+
+      // tick(imprecise as it's an integer) to price
+      sqrtPriceX96 = Helpers.getSqrtRatioAtTick(
+        int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapInterval))
+      );
+    }
+  }
+
+  function getPriceX96FromSqrtPriceX96(uint160 sqrtPriceX96) public pure returns(uint256 priceX96) {
+    return Helpers.mulDiv(sqrtPriceX96, sqrtPriceX96, Helpers.Q96);
   }
 
 
   function logPoolInfo() public view {
+    sl.indent();
     sl.logLineDelimiter("Pool Info");
     sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
     sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
+    (uint160 sqrtPriceX96, int24 currentTick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext,,) 
+    = univ3Pool.slot0();
+    sl.log("New sqrtPriceX96: ", sqrtPriceX96);
+    sl.logInt("Current tick: ", currentTick);
+    sl.log("Liquidity range: ", univ3Pool.liquidity());
+    sl.log("observationIndex: ", observationIndex, 0);
+    sl.log("observationCardinality: ", observationCardinality, 0);
+    sl.log("observationCardinalityNext: ", observationCardinalityNext, 0);
+    sl.logLineDelimiter();
+    sl.outdent();
   }
 
   function logTokenBalances(address user) public view {
