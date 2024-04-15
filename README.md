@@ -35,5 +35,5 @@ This is why projects import only the univ3 interfaces and then run tests on fork
 
 # Articles
 
-[Uniswap V3 Features Explained in Depth](https://medium.com/taipei-ethereum-meetup/uniswap-v3-features-explained-in-depth-178cfe45f223)
-[Uniswap V3 Error Codes and what they mean](https://docs.uniswap.org/contracts/v3/reference/error-codes)
+- [Uniswap V3 Features Explained in Depth](https://medium.com/taipei-ethereum-meetup/uniswap-v3-features-explained-in-depth-178cfe45f223)
+- [Uniswap V3 Error Codes and what they mean](https://docs.uniswap.org/contracts/v3/reference/error-codes)
