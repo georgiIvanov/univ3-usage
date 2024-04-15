@@ -161,30 +161,10 @@ contract TWAP is BaseTest, IUniswapV3MintCallback {
     sl.logLineDelimiter("Twap price for the last X minutes");
     vm.warp(block.timestamp + 1 minutes);
     // Reverts if twapInterval is too far to get a price
-    sl.log("TWAP sqrtPriceX96: ", getSqrtTwapX96(twapInterval));
-    sl.log("TWAP priceX96: ", getPriceX96FromSqrtPriceX96(getSqrtTwapX96(twapInterval)));
-  }
-
-  function getSqrtTwapX96(uint32 twapInterval) public view returns (uint160 sqrtPriceX96) {
-    if (twapInterval == 0) {
-      // return the current price if twapInterval == 0
-      (sqrtPriceX96, , , , , , ) = univ3Pool.slot0();
-    } else {
-      uint32[] memory secondsAgos = new uint32[](2);
-      secondsAgos[0] = twapInterval; // from (before)
-      secondsAgos[1] = 0; // to (now)
-      
-      (int56[] memory tickCumulatives, ) = univ3Pool.observe(secondsAgos);
-
-      // tick(imprecise as it's an integer) to price
-      sqrtPriceX96 = Helpers.getSqrtRatioAtTick(
-        int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapInterval))
-      );
-    }
-  }
-
-  function getPriceX96FromSqrtPriceX96(uint160 sqrtPriceX96) public pure returns(uint256 priceX96) {
-    return Helpers.mulDiv(sqrtPriceX96, sqrtPriceX96, Helpers.Q96);
+    uint160 sqrtPriceX96 = getSqrtTwapX96(twapInterval);
+    sl.log("TWAP sqrtPriceX96: ", sqrtPriceX96);
+    sl.log("TWAP priceX96: ", getPriceX96FromSqrtPriceX96(sqrtPriceX96));
+    sl.log("TWAP price: ", Helpers.sqrtPriceX96ToUint(sqrtPriceX96, 18));
   }
 
   /*//////////////////////////////////////////////////////////////

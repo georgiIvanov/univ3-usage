@@ -8,6 +8,7 @@ import "@uniswapv3-core/interfaces/IUniswapV3Factory.sol";
 import "@uniswapv3-core/interfaces/IUniswapV3Pool.sol";
 import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol';
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import "@src/INonfungiblePositionManager.sol";
 import "@src/ISwapRouter.sol";
@@ -34,6 +35,28 @@ contract BaseTest is Test {
   Swapper swapper; // EOA account can't swap directly on univ3 pool, because it requires callback
   address swapperAddr;
 
+  function getSqrtTwapX96(uint32 twapInterval) public view returns (uint160 sqrtPriceX96) {
+    if (twapInterval == 0) {
+      // return the current price if twapInterval == 0
+      (sqrtPriceX96, , , , , , ) = univ3Pool.slot0();
+    } else {
+      uint32[] memory secondsAgos = new uint32[](2);
+      secondsAgos[0] = twapInterval; // from (before)
+      secondsAgos[1] = 0; // to (now)
+      
+      (int56[] memory tickCumulatives, ) = univ3Pool.observe(secondsAgos);
+
+      // tick(imprecise as it's an integer) to price
+      sqrtPriceX96 = Helpers.getSqrtRatioAtTick(
+        int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapInterval))
+      );
+    }
+  }
+
+  function getPriceX96FromSqrtPriceX96(uint160 sqrtPriceX96) public pure returns(uint256 priceX96) {
+    return Helpers.mulDiv(sqrtPriceX96, sqrtPriceX96, Helpers.Q96);
+  }
+
   function logPoolBalancesInfo() public view {
     sl.logLineDelimiter("Pool Balances Info");
     sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
@@ -41,10 +64,19 @@ contract BaseTest is Test {
   }
 
   function logPoolDetailedInfo() public view {
+    IERC20Metadata t0 = IERC20Metadata(univ3Pool.token0());
+    IERC20Metadata t1 = IERC20Metadata(univ3Pool.token1());
+
     sl.indent();
     sl.logLineDelimiter("Pool Info");
-    sl.log(string.concat("balance token0 ", token0.name(), ": "), token0.balanceOf(address(univ3Pool)));
-    sl.log(string.concat("balance token1 ", token1.name(), ": "), token1.balanceOf(address(univ3Pool)));
+    sl.log(
+      string.concat("balance token0 ", t0.name(), ": "), 
+      t0.balanceOf(address(univ3Pool))
+    );
+    sl.log(
+      string.concat("balance token1 ", t1.name(), ": "), 
+      t1.balanceOf(address(univ3Pool))
+    );
     (uint160 sqrtPriceX96, int24 currentTick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext,,) 
     = univ3Pool.slot0();
     sl.log("New sqrtPriceX96: ", sqrtPriceX96);

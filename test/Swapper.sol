@@ -30,7 +30,7 @@ contract Swapper is IUniswapV3SwapCallback {
       bytes calldata
   ) external {
     sl.indent();
-    sl.logLineDelimiter("uniswapV3SwapCallback");
+    sl.logLineDelimiter("Swapper::uniswapV3SwapCallback");
     sl.logInt("amount0Delta: ", amount0Delta);
     sl.logInt("amount1Delta: ", amount1Delta);
 

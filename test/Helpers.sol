@@ -334,4 +334,10 @@ library Helpers {
       if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
       return toUint128(mulDiv(amount1, Q96, sqrtRatioBX96 - sqrtRatioAX96));
   }
+
+  function sqrtPriceX96ToUint(uint256 sqrtPriceX96, uint8 decimalsToken0) internal pure returns (uint256) {
+    uint256 numerator1 = uint256(sqrtPriceX96) * uint256(sqrtPriceX96);
+    uint256 numerator2 = 10**decimalsToken0;
+    return mulDiv(numerator1, numerator2, 1 << 192);
+  }
 }
