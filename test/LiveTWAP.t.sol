@@ -14,7 +14,7 @@ import {Helpers} from "./Helpers.sol";
 import {Swapper} from "./Swapper.sol";
 import {BaseTest} from "./BaseTest.sol";
 
-contract TWAP is BaseTest, IUniswapV3MintCallback {
+contract LiveTWAP is BaseTest, IUniswapV3MintCallback {
   uint24 constant poolFee = 500;
   uint256 tokensToDeposit = 5000 ether; // actual deposited tokens depend on the initial price ratio
 
@@ -26,7 +26,7 @@ contract TWAP is BaseTest, IUniswapV3MintCallback {
     univ3Pool = IUniswapV3Pool(uniFactory.getPool(address(USDC), address(WETH), poolFee));
   }
 
-  function testPerformSwapsAndObserveTWAP() public {
+  function testPerformSwapsAndObserveTWAP() view public {
     uint32 twapInterval = 6 minutes;
     logPoolDetailedInfo();
 

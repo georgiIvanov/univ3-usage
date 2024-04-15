@@ -10,6 +10,7 @@ Examples are meant to be examined in the following order:
 3. SingleSwap - perform a swap in one direction
 4. SwapAllLiquidity - perform swaps until liquidity in one side is depleted
 5. TWAP - calculate TWAP for a newly created pool
+6. LiveTWAP - calculate TWAP for production USDC/WETH pool
 
 > Some explanations are omitted in later examples for brevity.
 
