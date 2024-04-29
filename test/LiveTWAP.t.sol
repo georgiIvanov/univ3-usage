@@ -32,6 +32,7 @@ contract LiveTWAP is BaseTest, IUniswapV3MintCallback {
 
   // Shows price diff when tick is not rounded down, see notes for testSearchForNegativeTickRoundDownIssue
   function testShowPricesDiff() public {
+    blockNumber = 19_660_300;
     vm.createSelectFork(vm.rpcUrl("mainnet"), 19_660_300);
     univ3Pool = IUniswapV3Pool(uniFactory.getPool(
       address(0xdAC17F958D2ee523a2206206994597C13D831ec7), // usdt
@@ -48,6 +49,8 @@ contract LiveTWAP is BaseTest, IUniswapV3MintCallback {
     (int56[] memory tickCumulatives, ) = univ3Pool.observe(secondsAgos);
 
     int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
+    sl.log("blockNumber: ", blockNumber, 0);
+    sl.log("twapInterval: ", twapInterval, 0);
     sl.logInt("tickCumulativesDelta: ", tickCumulativesDelta, 0);
     
     int24 tick = int24(tickCumulativesDelta / int32(twapInterval));
