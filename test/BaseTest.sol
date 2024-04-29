@@ -46,6 +46,9 @@ contract BaseTest is Test {
       
       (int56[] memory tickCumulatives, ) = univ3Pool.observe(secondsAgos);
 
+      // Code below could pick a wrong tick, because in some situations tick math should round down
+      // https://github.com/Uniswap/v3-periphery/blob/697c2474757ea89fec12a4e6db16a574fe259610/contracts/libraries/OracleLibrary.sol#L27-L36
+
       // tick(imprecise as it's an integer) to price
       sqrtPriceX96 = Helpers.getSqrtRatioAtTick(
         int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapInterval))
