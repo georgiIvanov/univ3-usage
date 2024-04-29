@@ -28,8 +28,45 @@ contract LiveTWAP is BaseTest, IUniswapV3MintCallback {
       address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48), // usdc
       poolFee
     ));
+  }
 
-    logPoolDetailedInfo();
+  // Shows price diff when tick is not rounded down, see notes for testSearchForNegativeTickRoundDownIssue
+  function testShowPricesDiff() public {
+    vm.createSelectFork(vm.rpcUrl("mainnet"), 19_660_300);
+    univ3Pool = IUniswapV3Pool(uniFactory.getPool(
+      address(0xdAC17F958D2ee523a2206206994597C13D831ec7), // usdt
+      address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48), // usdc
+      poolFee
+    ));
+
+    uint32 twapInterval = 40 minutes;
+    uint32[] memory secondsAgos = new uint32[](2);
+
+    secondsAgos[0] = twapInterval; // from (before)
+    secondsAgos[1] = 0; // to (now)
+
+    (int56[] memory tickCumulatives, ) = univ3Pool.observe(secondsAgos);
+
+    int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
+    sl.logInt("tickCumulativesDelta: ", tickCumulativesDelta, 0);
+    
+    int24 tick = int24(tickCumulativesDelta / int32(twapInterval));
+    int24 tickRounedDown = tick;
+    // Always round to negative infinity
+    if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int32(twapInterval) != 0)) tickRounedDown--;
+    
+    sl.logInt("tick: ", tick, 0);
+    sl.logInt("tickRoundedDown: ", tickRounedDown, 0);
+
+    uint160 sqrtPriceX96 = Helpers.getSqrtRatioAtTick(tick);
+    uint160 sqrtPriceX96RoundedDown = Helpers.getSqrtRatioAtTick(tickRounedDown);
+
+    sl.logLineDelimiter("Tick to price");
+    sl.log("TWAP priceX96: ", getPriceX96FromSqrtPriceX96(sqrtPriceX96));
+    sl.log("TWAP price: ", Helpers.sqrtPriceX96ToUint(sqrtPriceX96, 6), 6);
+    sl.logLineDelimiter("Rounded tick to price");
+    sl.log("TWAP priceX96: ", getPriceX96FromSqrtPriceX96(sqrtPriceX96RoundedDown));
+    sl.log("TWAP price: ", Helpers.sqrtPriceX96ToUint(sqrtPriceX96RoundedDown, 6), 6);
   }
 
   // In some situations tick should be rounded down
@@ -37,6 +74,7 @@ contract LiveTWAP is BaseTest, IUniswapV3MintCallback {
   // This test aims to showcase the issue
   // Set pool and starting block number, test will run until it finds appropriate block and twap interval.
   function testSearchForNegativeTickRoundDownIssue() public {
+    logPoolDetailedInfo();
     uint32 twapInterval = 10 minutes;
     uint32[] memory secondsAgos = new uint32[](2);
 
